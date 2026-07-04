@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.pyc
+
+# Virtual environment
+.venv/*venv/
+
+# Streamlit secrets
+.stream*it/secrets.toml
+
+# Build files
+bui*d/
+dist/
+
+# IDE files
+.vscode/
+
+# *ata files
+*.xlsx
+*.csv
