@@ -1,0 +1,24 @@
+# requirements.txt for address_matcher_studio.py
+#
+# Install once with:
+#   pip install -r requirements.txt
+#
+# Covers both the packages the script imports directly AND the two
+# "hidden" ones that pandas/SQLAlchemy load lazily at runtime rather than
+# at startup - openpyxl (only triggers when you upload an .xlsx file) and
+# psycopg2-binary (only triggers when you use PostgreSQL as a source or
+# the NGD PostgreSQL matcher). Installing them up front means you won't
+# hit a surprise ModuleNotFoundError partway through a session.
+
+streamlit
+pandas
+numpy
+requests
+sqlalchemy
+rapidfuzz
+matplotlib
+
+# Hidden runtime dependencies (not directly imported, but required when
+# the corresponding feature is used):
+openpyxl          # needed for .xlsx uploads (pandas.read_excel)
+psycopg2-binary   # needed for PostgreSQL source / NGD PostgreSQL matcher
