@@ -1,20 +1,16 @@
-# Python
-__pycache__/
+__pyc*che__/
 *.pyc
+.venv/
+venv/
 
-# Virtual environment
-.venv/*venv/
+.streamlit/secrets.toml
 
-# Streamlit secrets
-.stream*it/secrets.toml
-
-# Build files
-bui*d/
-dist/
-
-# IDE files
 .vscode/
 
-# *ata files
+build/
+dist/
+
 *.xlsx
 *.csv
+
+Thumbs.db
