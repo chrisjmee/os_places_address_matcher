@@ -11,6 +11,7 @@
 #
 # Run with: streamlit run address_matcher_studio_customer.py
 
+import importlib.util
 import math
 import os
 import re
@@ -18,12 +19,16 @@ import sqlite3
 import time
 from pathlib import Path
 
-try:
-    import matplotlib.pyplot as plt
-    _HAS_MATPLOTLIB = True
-except ImportError:
-    plt = None
-    _HAS_MATPLOTLIB = False
+# matplotlib (~1s to import) is only actually needed once results exist
+# (the chart) - since Streamlit re-executes this whole file on every
+# page load and every widget interaction, importing it unconditionally
+# at the top meant paying that cost before the user had even loaded a
+# file, on every single rerun. find_spec() checks availability without
+# actually loading the module; the real `import matplotlib.pyplot` line
+# is deferred to the exact point the chart is drawn (see Section 4).
+_HAS_MATPLOTLIB = importlib.util.find_spec("matplotlib") is not None
+plt = None  # populated by a lazy import the first time a chart is drawn
+
 import numpy as np
 import pandas as pd
 import requests
@@ -31,6 +36,32 @@ import streamlit as st
 
 from rapidfuzz import fuzz as rfuzz
 from rapidfuzz import process as rprocess
+
+
+def check_password():
+    """Simple session-based password gate. Requires a `.streamlit/secrets.toml`
+    file (never committed to git - add it to .gitignore) containing:
+        APP_PASSWORD = "your-password-here"
+    On Streamlit Community Cloud or similar, set the equivalent secret in
+    the platform's own settings instead of a local file."""
+    if "authenticated" not in st.session_state:
+        st.session_state.authenticated = False
+    if st.session_state.authenticated:
+        return True
+    st.title("OS Places Address Matcher")
+    st.info("Authorised Users Only")
+    password = st.text_input("Password", type="password")
+    if st.button("Login"):
+        if password == st.secrets["APP_PASSWORD"]:
+            st.session_state.authenticated = True
+            st.rerun()
+        else:
+            st.error("Incorrect password")
+    return False
+
+
+if not check_password():
+    st.stop()
 
 # =============================================================================
 # SECTION 1: CORE MATCHING ENGINE
@@ -1296,6 +1327,7 @@ if st.session_state["source_df"] is not None:
             # this environment, so a missing dependency degrades the
             # display rather than crashing the whole app.
             if _HAS_MATPLOTLIB:
+                import matplotlib.pyplot as plt  # lazy import - see note at top of file
                 _grade_colors = {
                     "A EXACT_SITE_MATCH": "#2ecc71", "B REVIEW_REQUIRED": "#f1c40f",
                     "C PROBABLE_MATCH": "#3498db", "D NO_MATCH": "#e74c3c",
@@ -1413,3 +1445,4 @@ if st.session_state["source_df"] is not None:
                                     file_name=f"{stem}_failed_requests_{timestamp}.csv", mime="text/csv")
             else:
                 st.caption("No failed API requests logged for this run.")
+
